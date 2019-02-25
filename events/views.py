@@ -1,11 +1,121 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
-from .forms import UserSignup, UserLogin
-
+from .forms import UserSignup, UserLogin, EventForm, EventUpdateForm, BookingForm
+from .models import EventModel, Booking
+from django.contrib import messages
+import datetime
+from django.db.models import Q
 def home(request):
     return render(request, 'home.html')
 
+def book(request, event_id):
+    if request.user.is_anonymous:
+        return redirect('login')
+    event = EventModel.objects.get(id=event_id)
+    seats = event.seats
+    if seats == 0:
+        messages.warning(request, "The event is full.")
+        return redirect('event-detail', event_id)
+    form = BookingForm()
+    if request.method == "POST":
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            book = form.save(commit=False)
+            my_seats = form.cleaned_data['seats']
+            event.seats = event.seats - my_seats
+            if event.seats < 0:
+                messages.warning(request, "The event doesn't have enough seats.")
+                return redirect('booking', event_id)
+            else:
+                book.event = event
+                book.user = request.user
+                event.save()
+                book.save()
+                messages.success(request, "Booking successful.")
+                return redirect('event-detail', event_id)
+    context = {
+        "form":form,
+        "event": event,
+
+    }
+    return render(request, 'book_seat.html', context)
+
+def event_create(request):
+    #Add permissions
+    
+    if request.user.is_anonymous:
+        return redirect("login")
+    form = EventForm()
+    if request.method == 'POST':
+        form = EventForm(request.POST)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.organizer = request.user
+            event.save()
+            return redirect('event-detail', event.id)
+    context = {
+        'eventform' : form,
+        }
+    return render(request, 'create_event.html', context)
+
+def event_update(request, event_id):
+    event_obj = EventModel.objects.get(id=event_id)
+    if not (request.user.is_staff or request.user == event_obj.organizer):
+        return redirect('login')
+    form = EventUpdateForm(instance=event_obj)
+    if request.method == "POST":
+        form = EventUpdateForm(request.POST, instance=event_obj)
+        if form.is_valid():
+            form.save()
+            return redirect('event-list')
+    context = {
+        "event_obj": event_obj,
+        "form":form,
+    }
+    return render(request, 'event_update.html', context)
+
+def dashboard(request):
+    my_events = EventModel.objects.filter(organizer=request.user)
+    my_bookings = request.user.mybookings.all()
+    # my_bookings = my_bookings.filter(event__datetime__lte=datetime.datetime.now())
+    context = {
+        "events": my_events,
+        "bookings": my_bookings,
+    }
+    return render(request, 'dashboard.html', context)
+
+def event_delete(request, event_id):
+    if not request.user.is_staff:
+        return redirect('login')
+    EventModel.objects.get(id=event_id).delete()
+    return redirect('home')
+
+def event_list(request):
+    events = EventModel.objects.filter(datetime__gte=datetime.datetime.today())
+    query = request.GET.get('q')
+    if query:
+        events = events.filter(
+            Q(title__icontains=query)|
+            Q(description__icontains=query)|
+            Q(organizer__username__icontains=query)
+        ).distinct()
+
+    context = {
+       "events": events,
+    }
+    return render(request, 'event_list.html', context)
+
+def event_detail(request, event_id):
+    if request.user.is_anonymous:
+        return redirect('login')
+    event = EventModel.objects.get(id=event_id)
+    bookings = Booking.objects.filter(event=event)
+    context = {
+        "event": event,
+        "bookings": bookings,
+    }
+    return render(request, 'event_detail.html', context)
 class Signup(View):
     form_class = UserSignup
     template_name = 'signup.html'

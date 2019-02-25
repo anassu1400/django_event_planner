@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock title %}
+
+{% block content %}
+<div class="container">
+<br>
+
+
+
+  {% if events %}
+  <div class="row">
+        <h2>My Events:</h2>
+    {% for event in events %}
+      <div class="col-md-4">
+          <div class="card my-card">
+            <div class="card-body">
+              <h5 class="card-title">{{event.title}}</h5>
+              <p class="card-text">
+                <div class="float-left">
+                  {{event.description}}
+                </div>
+              <br>
+              <div class="float-left">
+                  {{event.datetime}}
+                </div>
+              </p>
+            </div>
+
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item text-center">
+                  <a href="{% url 'event-detail' event.id %}" class="btn btn-outline-dark">View</a>
+              </li>
+            </ul>
+          </div>
+      </div>
+    {% endfor %}
+</div>
+<br>
+    {% endif %}
+      <div class="row">
+      <h2>My Bookings:</h2>
+      {% for booking in bookings %}
+          <div class="col-md-4">
+            <div class="card my-card">
+              <div class="card-body">
+                <h5 class="card-title">{{booking.event.title}}</h5>
+                <p class="card-text">
+                  <div class="float-left">
+                    {{booking.event.description}}
+                  </div>
+                
+                <div class="float-left">
+                    {{booking.event.datetime}}
+                  </div>
+                </p>
+              </div>
+              
+            </div>
+        </div>
+        <br>
+    {% endfor %}
+    
+</div>
+</div>
+{% endblock content %}
+
