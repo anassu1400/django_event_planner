@@ -9,7 +9,11 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 def home(request):
-    return render(request, 'home.html')
+    events = EventModel.objects.all()[:2]
+    context ={
+        'events': events
+    }
+    return render(request, 'home.html', context)
 
 
 #doubles as details page

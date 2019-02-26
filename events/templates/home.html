@@ -11,6 +11,9 @@
       {% else %}
         <a href="{% url 'event-list' %}" class="btn btn-primary btn-xl rounded-pill mt-5">Find events!</a>
       {% endif %}
+      {% for event in events %}
+        <p>{{event.title}}</p>
+      {% endfor %}
     </div>
   </div>
   <div class="bg-circle-1 bg-circle"></div>
