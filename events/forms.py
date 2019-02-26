@@ -16,15 +16,9 @@ class EventForm(forms.ModelForm):
 		model = EventModel
 		exclude = ['organizer']
 		widgets={
-			'datetime': forms.DateTimeInput(format="%d %b %Y %H:%M"),
-		}
+			'date': forms.DateInput(attrs={'type':'date'}),
+			'time': forms.TimeInput(attrs={'type':'time'}),
 
-class EventUpdateForm(forms.ModelForm):
-	class Meta:
-		model = EventModel
-		exclude = ['organizer', 'datetime']
-		widgets={
-			'datetime': forms.DateTimeInput(format="%d %b %Y %H:%M"),
 		}
 
 class BookingForm(forms.ModelForm):

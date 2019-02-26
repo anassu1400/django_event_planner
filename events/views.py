@@ -1,49 +1,51 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
-from .forms import UserSignup, UserLogin, EventForm, EventUpdateForm, BookingForm
+from .forms import UserSignup, UserLogin, EventForm, BookingForm
 from .models import EventModel, Booking
 from django.contrib import messages
 import datetime
 from django.db.models import Q
+from django.http import JsonResponse
+
 def home(request):
     return render(request, 'home.html')
 
+
+#doubles as details page
 def book(request, event_id):
+    #permissions
     if request.user.is_anonymous:
         return redirect('login')
+    #get the event we'd like to book
     event = EventModel.objects.get(id=event_id)
-    seats = event.seats
-    if seats == 0:
-        messages.warning(request, "The event is full.")
-        return redirect('event-detail', event_id)
+    #get the bookings that are to this event
+    bookings = Booking.objects.filter(event=event)
+    #get number of seats set for the event
     form = BookingForm()
     if request.method == "POST":
         form = BookingForm(request.POST)
         if form.is_valid():
             book = form.save(commit=False)
             my_seats = form.cleaned_data['seats']
-            event.seats = event.seats - my_seats
-            if event.seats < 0:
+            # new_seats = event.seats - my_seats
+            seats = event.seats_left()
+            if my_seats > seats:
                 messages.warning(request, "The event doesn't have enough seats.")
-                return redirect('booking', event_id)
             else:
-                book.event = event
-                book.user = request.user
-                event.save()
+                book = Booking(user= request.user, event= event, seats = my_seats)
                 book.save()
                 messages.success(request, "Booking successful.")
                 return redirect('event-detail', event_id)
     context = {
         "form":form,
         "event": event,
-
+        "bookings": bookings,
     }
-    return render(request, 'book_seat.html', context)
+    return render(request, 'event_detail.html', context)
+
 
 def event_create(request):
-    #Add permissions
-    
     if request.user.is_anonymous:
         return redirect("login")
     form = EventForm()
@@ -59,13 +61,14 @@ def event_create(request):
         }
     return render(request, 'create_event.html', context)
 
+
 def event_update(request, event_id):
     event_obj = EventModel.objects.get(id=event_id)
     if not (request.user.is_staff or request.user == event_obj.organizer):
         return redirect('login')
-    form = EventUpdateForm(instance=event_obj)
+    form = EventForm(instance=event_obj)
     if request.method == "POST":
-        form = EventUpdateForm(request.POST, instance=event_obj)
+        form = EventForm(request.POST, instance=event_obj)
         if form.is_valid():
             form.save()
             return redirect('event-list')
@@ -75,15 +78,19 @@ def event_update(request, event_id):
     }
     return render(request, 'event_update.html', context)
 
+
 def dashboard(request):
-    my_events = EventModel.objects.filter(organizer=request.user)
+    # my_events = EventModel.objects.filter(organizer=request.user)
+    my_events = request.user.myevents.all()
     my_bookings = request.user.mybookings.all()
     # my_bookings = my_bookings.filter(event__datetime__lte=datetime.datetime.now())
+    unique_bookings = list(set(my_bookings))
     context = {
         "events": my_events,
-        "bookings": my_bookings,
+        "bookings": unique_bookings,
     }
     return render(request, 'dashboard.html', context)
+
 
 def event_delete(request, event_id):
     if not request.user.is_staff:
@@ -91,8 +98,9 @@ def event_delete(request, event_id):
     EventModel.objects.get(id=event_id).delete()
     return redirect('home')
 
+#list view with search bar
 def event_list(request):
-    events = EventModel.objects.filter(datetime__gte=datetime.datetime.today())
+    events = EventModel.objects.filter(date__gte=datetime.date.today())
     query = request.GET.get('q')
     if query:
         events = events.filter(
@@ -100,22 +108,12 @@ def event_list(request):
             Q(description__icontains=query)|
             Q(organizer__username__icontains=query)
         ).distinct()
-
     context = {
        "events": events,
     }
     return render(request, 'event_list.html', context)
 
-def event_detail(request, event_id):
-    if request.user.is_anonymous:
-        return redirect('login')
-    event = EventModel.objects.get(id=event_id)
-    bookings = Booking.objects.filter(event=event)
-    context = {
-        "event": event,
-        "bookings": bookings,
-    }
-    return render(request, 'event_detail.html', context)
+
 class Signup(View):
     form_class = UserSignup
     template_name = 'signup.html'

@@ -3,11 +3,14 @@
 {% block title %}Dashboard{% endblock title %}
 
 {% block content %}
+<div class="sidenav">
+  <a href="#contact">Profile</a>
+  <a href="#about">My Events</a>
+  <a href="#services">My Bookings</a>
+  <a href="{% url 'event-create' %}">Create Event</a>
+</div>
 <div class="container">
 <br>
-
-
-
   {% if events %}
   <div class="row">
         <h2>My Events:</h2>
@@ -38,6 +41,7 @@
 </div>
 <br>
     {% endif %}
+    {% if bookings %}
       <div class="row">
       <h2>My Bookings:</h2>
       {% for booking in bookings %}
@@ -46,12 +50,13 @@
               <div class="card-body">
                 <h5 class="card-title">{{booking.event.title}}</h5>
                 <p class="card-text">
+                  
                   <div class="float-left">
                     {{booking.event.description}}
                   </div>
-                
+                <br>
                 <div class="float-left">
-                    {{booking.event.datetime}}
+                    {{booking.event.datetime.date}}
                   </div>
                 </p>
               </div>
@@ -62,6 +67,8 @@
     {% endfor %}
     
 </div>
+    {% endif %}
+      
 </div>
 {% endblock content %}
 

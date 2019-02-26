@@ -2,9 +2,11 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
+<div class="container">
 	<form action="{% url 'event-create' %}" method="POST" enctype="multipart/form-data">
 		{% csrf_token %}
 		{{eventform|crispy}}
 		<input type="submit" value="Create" class="btn" style="background-color: #e3f2fd; color: black;">
 	</form>
+</div>
 {% endblock content %}

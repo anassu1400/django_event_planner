@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 
 {% block title %}Detail{% endblock title %}
 
@@ -11,8 +12,9 @@
   <div class="card-body">
     <h5 class="card-title">{{event.title}}</h5>
     <p class="card-text">{{event.description|linebreaks}}</p>
-    <p class="card-text">Start at: {{event.datetime}}</p>
-     <p class="card-text">Seats Available: {{event.seats}}</p>
+    <p class="card-text">Start at: {{event.date}}{{event.time}}</p>
+    <p class="card-text">Seats Available: {{event.seats_left}}</p>
+    <p class="card-text">Organizer: {{event.organizer}}</p>
   </div>
  
  
@@ -25,13 +27,12 @@
         <div class="col-md-4">
             <a href="{% url 'event-delete' event.id %}" class="btn btn-outline-danger btn-block">Delete</a>
         </div>
-        <div class="col-md-6">
-            <a href="{% url 'booking' event.id %}" class="btn btn-outline-primary btn-block">Book</a>
-        </div>
+        
       {% elif request.user == event.organizer or request.user.is_staff %}
         <div class="col-md-6">
             <a href="{% url 'event-update' event.id %}" class="btn btn-outline-primary btn-block">Update</a>
         </div>
+        <br>
         <div class="col-md-6">
           <ul>
             {% for booking in bookings %}
@@ -41,14 +42,24 @@
             {% endfor %}
             </ul>
         </div>
-        {% elif not request.user.is_anonymous %}
-          <div class="col-md-6">
-            <a href="{% url 'booking' event.id %}" class="btn btn-outline-primary btn-block">Book</a>
-        </div>
+        
 
       {% endif %}
     </div>
   </div>
-</div>
+  
+  {% if not event.seats_left == 0 and not event.organizer == request.user%}
+    <h2>Book seats!</h2>
+  
+    
+  <form action="{% url 'event-detail' event.id %}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form|crispy}}
+    <input type="submit" value="Book" class="btn" style="background-color: #e3f2fd; color: black;">
+  </form>
+  {% elif event.seats == 0 %}
+    <h2>Event Full!</h2>
+  {% endif %}
+  </div>
 </div>
 {% endblock content %}
