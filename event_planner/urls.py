@@ -17,10 +17,34 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-
+from api.views import (
+    EventList,
+    EventDetail,
+    EventCreate,
+    EventUpdate,
+    EventDelete,
+    OrganizerEventList,
+    RegisterView,
+    UserBookingList,
+    Following,
+)
+from rest_framework_jwt.views import obtain_jwt_token
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('events.urls')),
+
+    path('api/login/', obtain_jwt_token, name='api-login'),
+    path('api/register/', RegisterView.as_view(), name='api-register'),
+
+    path('api/', EventList.as_view(), name='api-list'),
+    path('api/organizer_events/<int:user_id>/', OrganizerEventList.as_view(), name='api-organizer-list'),
+    path('api/bookings/', UserBookingList.as_view(), name='api-user-booking'),
+    path('api/<int:event_id>/', EventDetail.as_view(), name='api-detail'),
+    path('api/add/', EventCreate.as_view(), name='api-create'),
+    path('api/<int:event_id>/update/', EventUpdate.as_view(), name='api-update'),
+    path('api/<int:event_id>/delete/', EventDelete.as_view(), name='api-delete'),
+    path('api/following/', Following.as_view(), name='api-following'),
+
 ]
 
 

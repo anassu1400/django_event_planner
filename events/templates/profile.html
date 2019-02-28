@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Profile{% endblock title %}
+
+{% block content %}
+
+<div class="container">
+<br>
+
+<div class="card-prof2">
+<table class="table">
+  <tr>
+    <th scope="col">Name</th>
+    <th scope="col">Events</th>
+    <th scope="col">Following</th>
+    <th scope="col">Followers</th>
+  </tr>
+  <tr>
+    <td scope="row">{{user.username}}</td>
+    <td>{{user.myevents.all.count}}</td>
+    <td>{{user.followings.count}}</td>
+    <td>{{user.followers.count}}</td>
+    {% if request.user != user %}
+    <td>
+      <button class="btn btn-light" onclick="follow({{user.id}})"><p id="follow-{{user.id}}">{% if request.user.id in follow_list %} Unfollow {% else %}Follow{% endif %}</p></button></td>
+      {% elif request.user == user %}
+       <td> <a href="{% url 'profile-update' %}" class="btn btn-outline-warning">Update</a></td>
+    {% endif %}
+  </tr>
+</table> 
+ 
+</div>
+<div class="card-prof3">
+  <div class="card-body">
+    <h5 class="card-title">Username: {{user.username}}</h5>
+    <p class="card-text">First Name: {{user.first_name}}</p>
+    <p class="card-text">Last Name: {{user.last_name}}</p>
+    <p class="card-text">Email: {{user.email}}</p>
+    <p class="card-text">Last Login: {{user.last_login}}</p>
+    <p class="card-text">Date Joined: {{user.date_joined}}</p>
+  </div>
+  
+</div>
+<h2 class="text-white">List of events by {{user.username}}:</h2>
+ <div class="card-prof">
+
+  <div class="row" id="ads">
+    {% for event in events %}
+      <div class="col-4">
+    <div class="card-group">
+      <div class="card-body-home mx-3 mr-5" style="width: 18rem"> 
+      <img class="img-fluid rounded" src="{% static 'css/coming-soon-content-2.png' %}" alt="Alternate Text" style="width:100%"/>
+      <br>   <br>
+
+     <i class="fab fa-fly"></i>
+      <br>
+        <br>
+         <h5 class="card-title-home text-white"> {{event.title}} </h5>
+          <p class="card-text-home text-white"> {{event.description}} </p>
+          <p class="card-text-home text-white"> {{event.organizer}} </p>
+          <a href="{% url 'event-detail' event.id %}" class="btn-view btn-outline-dark btn-block text-white">View</a>
+    </div>
+    </div>
+    </div>
+    {% endfor %}
+     </div>
+</div>
+
+
+<script>
+    function follow(id){
+        $.ajax(
+            {
+                type: "GET",
+                url: "/profile/" + id + "/follow",
+                success: function(data){
+                    console.log(data);
+                    var user_id = "#follow-"+id;
+                    if(data.action === 'followed'){
+                        $(user_id).html("Unfollow");
+                    } else {
+                        $(user_id).html("Follow");
+                    }
+                },
+                error: function(){
+                    console.log('error');
+                },
+            }
+        );
+    }
+</script>
+{% endblock content %}

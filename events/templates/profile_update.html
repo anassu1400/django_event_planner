@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 
-{% block title %}Update{% endblock title %}
+{% block title %}Update Profile{% endblock title %}
 
 {% block content %}
 <br>
-
 <div class="card-update">
+  <br><br>
   <h5 class="card-header">Update:</h5>
   <div class="card-body">
     <p class="card-text">
-        <form action="{% url 'event-update' event_obj.id %}" method="POST" enctype="multipart/form-data">
+        <form action="{% url 'profile-update' %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             {{form|crispy}}
-            <input type="submit" value="Update" class="btn btn-outline-primary">
+            <input type="submit" value="Update" class="btn btn-outline-warning btn-block">
         </form>
     </p>
   </div>

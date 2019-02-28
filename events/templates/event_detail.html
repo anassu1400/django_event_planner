@@ -6,7 +6,7 @@
 {% block content %}
 <div class="container">
 <br>
-<div class="card">
+<div class="card-detail">
   <h5 class="card-header">Events Info</h5>
   
   <div class="card-body">
@@ -15,22 +15,18 @@
     <p class="card-text">Start at: {{event.date}}{{event.time}}</p>
     <p class="card-text">Seats Available: {{event.seats_left}}</p>
     <p class="card-text">Organizer: {{event.organizer}}</p>
-  </div>
- 
+    <a href="{% url 'profile' event.organizer.id %}" class="btn btn-outline-dark">View Profile</a>
+  
  
   <div class="card-body">
     <div class="row text-center">
       {% if request.user.is_staff %}
-        <div class="col-md-4">
-            <a href="{% url 'event-update' event.id %}" class="btn btn-outline-primary btn-block">Update</a>
-        </div>
-        <div class="col-md-4">
-            <a href="{% url 'event-delete' event.id %}" class="btn btn-outline-danger btn-block">Delete</a>
-        </div>
         
       {% elif request.user == event.organizer or request.user.is_staff %}
-        <div class="col-md-6">
-            <a href="{% url 'event-update' event.id %}" class="btn btn-outline-primary btn-block">Update</a>
+        <div class="col-12">
+            <a href="{% url 'event-update' event.id %}" class="btn btn-outline-warning btn-block">Update</a>
+                        <a href="{% url 'event-delete' event.id %}" class="btn btn-outline-danger btn-block">Delete</a>
+
         </div>
         <br>
         <div class="col-md-6">
@@ -61,5 +57,6 @@
     <h2>Event Full!</h2>
   {% endif %}
   </div>
+</div>
 </div>
 {% endblock content %}
